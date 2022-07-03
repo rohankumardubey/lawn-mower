@@ -9,6 +9,7 @@ critical:
 
 infra:
   - infra/**/*
+  - docker-compose.yml
 
 docs:
   - docs/**/*
