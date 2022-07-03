@@ -1,5 +1,5 @@
 BASE = $(CURDIR)
-MODULE = hello-service
+MODULE = catalog-service
 
 .PHONY: all $(MODULE)
 all: $(MODULE)
