@@ -1,0 +1,28 @@
+---
+# Default GitHub labels
+- color: d63031
+  name: bug
+  description: Something isn't working
+- color: 00cec9
+  name: enhancement
+  description: New feature or request
+- color: 000000
+  name: wontfix
+  description: This will not be worked on
+
+# Labels specific to Lawn Mower
+- color: e84393
+  name: critical
+  description: critical;
+- color: 6c5ce7
+  name: database
+  description: Everything related to database
+- color: 74b9ff
+  name: domain/catalog
+  description: Everything related to Catalog Service
+- color: b2bec3
+  name: infra
+  description: Infra
+- color: dfe6e9
+  name: docs
+  description: Documentation
