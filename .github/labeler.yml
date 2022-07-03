@@ -1,0 +1,15 @@
+domain/catalog:
+  - apps/catalog-service/*
+
+database:
+  - apps/**/*.sql
+
+critical:
+  - apps/**/*.sql
+
+infra:
+  - infra/**/*
+
+docs:
+  - docs/**/*
+  - README.md
