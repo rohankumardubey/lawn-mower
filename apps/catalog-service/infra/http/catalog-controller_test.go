@@ -15,11 +15,16 @@ import (
 func TestCreateMowerCtrl(t *testing.T) {
 
 	t.Run("AddMowerCtrl return accepted on POST", func(t *testing.T) {
-		repo := &lm_testing.StubCatalogRepository{Mowers: map[string]*domain.Mower{}}
+		wantedCatalog := []*domain.Mower{
+			{Id: "1", Name: "M-90"},
+			{Id: "2", Name: "M-150"},
+			{Id: "3", Name: "M-480"},
+		}
+		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
 		server, _ := NewCatalogHttpServer(repo)
 
 		mower := &AddMowerInputDTO{Name: "M-600"}
-		wantedMower := domain.Mower{Name: "M-600", Id: "1"}
+		wantedMower := domain.Mower{Name: "M-600", Id: "4"}
 
 		request := NewPostAddMowerRequest(mower)
 		response := httptest.NewRecorder()
@@ -36,10 +41,13 @@ func TestCreateMowerCtrl(t *testing.T) {
 }
 
 func TestFindMowerCtrl(t *testing.T) {
-	repo := &lm_testing.StubCatalogRepository{Mowers: map[string]*domain.Mower{
-		"1": {Id: "1", Name: "M-350"},
-		"2": {Id: "2", Name: "M-150"},
-	}}
+	wantedCatalog := []*domain.Mower{
+		{Id: "1", Name: "M-90"},
+		{Id: "2", Name: "M-150"},
+		{Id: "3", Name: "M-480"},
+	}
+
+	repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
 	server, _ := NewCatalogHttpServer(repo)
 
 	t.Run("FindMowerCtrl return M-350 mower", func(t *testing.T) {
@@ -49,7 +57,7 @@ func TestFindMowerCtrl(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		got := lm_testing.GetMowerFromResponse(t, response.Body)
-		wantedMower := domain.Mower{Id: "1", Name: "M-350"}
+		wantedMower := domain.Mower{Id: "1", Name: "M-90"}
 
 		lm_testing.AssertStatus(t, response.Code, http.StatusOK)
 		lm_testing.AssertContentType(t, response, JsonContentType)
@@ -82,6 +90,30 @@ func TestFindMowerCtrl(t *testing.T) {
 	})
 }
 
+func TestGetCatalogCtrl(t *testing.T) {
+	wantedCatalog := []*domain.Mower{
+		{Id: "1", Name: "M-90"},
+		{Id: "2", Name: "M-150"},
+		{Id: "3", Name: "M-480"},
+	}
+
+	repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
+	server, _ := NewCatalogHttpServer(repo)
+
+	t.Run("GetCatalogCtrl return list of mowers", func(t *testing.T) {
+		request := NewGetCatalogRequest()
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		got := lm_testing.GetCatalogFromResponse(t, response.Body)
+
+		lm_testing.AssertCatalogEquals(t, got, wantedCatalog)
+		lm_testing.AssertStatus(t, response.Code, http.StatusOK)
+		lm_testing.AssertContentType(t, response, JsonContentType)
+	})
+}
+
 func NewPostAddMowerRequest(body interface{}) *http.Request {
 	jsonBytes, _ := json.Marshal(body)
 
@@ -91,5 +123,10 @@ func NewPostAddMowerRequest(body interface{}) *http.Request {
 
 func NewFindAddMowerRequest(id string) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/mowers/"+id, nil)
+	return req
+}
+
+func NewGetCatalogRequest() *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	return req
 }

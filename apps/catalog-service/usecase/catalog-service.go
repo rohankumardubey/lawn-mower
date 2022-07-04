@@ -7,6 +7,7 @@ import (
 type CatalogService interface {
 	Add(input domain.AddMowerDTO) (*domain.Mower, error)
 	Find(id string) (*domain.Mower, error)
+	FindAll() ([]*domain.Mower, error)
 }
 
 type LMCatalogService struct {
