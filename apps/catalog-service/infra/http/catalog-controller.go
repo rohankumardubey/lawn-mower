@@ -31,6 +31,7 @@ func NewCatalogHttpServer(repo domain.CatalogRepository) (*CatalogHttpServer, er
 	router := http.NewServeMux()
 	router.HandleFunc("/mowers", http.HandlerFunc(s.CreateMower))
 	router.HandleFunc("/mowers/", http.HandlerFunc(s.FindMower))
+	router.HandleFunc("/", http.HandlerFunc(s.GetCatalog))
 
 	s.Handler = router
 
@@ -73,4 +74,17 @@ func (serv *CatalogHttpServer) FindMower(w http.ResponseWriter, r *http.Request)
 	}
 
 	json.NewEncoder(w).Encode(mower)
+}
+
+func (serv *CatalogHttpServer) GetCatalog(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", JsonContentType)
+
+	mowers, err := serv.service.FindAll()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(mowers)
 }

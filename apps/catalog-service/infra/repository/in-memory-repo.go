@@ -48,3 +48,10 @@ func (r *InMemoryRepo) Find(id string) (mower *domain.Mower, err error) {
 	}
 	return nil, nil
 }
+
+func (r *InMemoryRepo) FindAll() (mowers []*domain.Mower, err error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	return r.Mowers, nil
+}

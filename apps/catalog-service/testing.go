@@ -11,11 +11,16 @@ import (
 )
 
 type StubCatalogRepository struct {
-	Mowers map[string]*domain.Mower
+	Mowers []*domain.Mower
 }
 
 func (r *StubCatalogRepository) Find(id string) (*domain.Mower, error) {
-	return r.Mowers[id], nil
+	for i, mower := range r.Mowers {
+		if mower.Id == id {
+			return r.Mowers[i], nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *StubCatalogRepository) Add(input domain.AddMowerDTO) (*domain.Mower, error) {
@@ -26,9 +31,13 @@ func (r *StubCatalogRepository) Add(input domain.AddMowerDTO) (*domain.Mower, er
 		Name: input.Name,
 	}
 
-	r.Mowers[id] = mower
+	r.Mowers = append(r.Mowers, mower)
 
 	return mower, nil
+}
+
+func (r *StubCatalogRepository) FindAll() ([]*domain.Mower, error) {
+	return r.Mowers, nil
 }
 
 func AssertNoError(t testing.TB, err error) {
@@ -40,6 +49,14 @@ func AssertNoError(t testing.TB, err error) {
 }
 
 func AssertMowerEquals(t testing.TB, got, want domain.Mower) {
+	t.Helper()
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
+func AssertCatalogEquals(t testing.TB, got, want []*domain.Mower) {
 	t.Helper()
 
 	if !reflect.DeepEqual(got, want) {
@@ -87,6 +104,18 @@ func GetMowerFromResponse(t testing.TB, body io.Reader) (mower domain.Mower) {
 
 	if err != nil {
 		t.Fatalf("Unable to parse response from server %q into Mower, '%v'", body, err)
+	}
+
+	return
+}
+
+func GetCatalogFromResponse(t testing.TB, body io.Reader) (mowers []*domain.Mower) {
+	t.Helper()
+
+	err := json.NewDecoder(body).Decode(&mowers)
+
+	if err != nil {
+		t.Fatalf("Unable to parse response from server %q into Catalog, '%v'", body, err)
 	}
 
 	return

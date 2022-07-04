@@ -7,6 +7,15 @@ all: $(MODULE)
 $(MODULE):
 	@go build -v -o $(BASE)/bin/$@
 
+.PHONY: test coverage
+test-all:
+	@go test -v ./...
+
+coverage:
+	@go test -coverprofile=coverage.out -v ./...
+	@go tool cover -html=coverage.out
+
+
 .PHONY: clean list
 clean:
 	@rm -rfv bin
