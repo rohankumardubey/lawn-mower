@@ -28,17 +28,17 @@ Monorepo Go, React, Typescript. Learn Golang Microservices and other stuff
 
 High-level plan is represented in the Table
 
-| Feature | Status |
-|---------|--------|
-| Api Gateway | To Do |
-| Catalog Service | In Progress |
-| Booking Service | To Do |
-| User Service | To Do |
-| Catalog Management Client | To Do |
-| Booking Management Client | To Do |
-| User Management Client | To Do |
-| Lawn Mower Client | To Do |
-| Lawn Mower App | To Do |
+| Feature                   | Status      |
+| ------------------------- | ----------- |
+| Api Gateway               | To Do       |
+| Catalog Service           | In Progress |
+| Booking Service           | To Do       |
+| User Service              | To Do       |
+| Catalog Management Client | To Do       |
+| Booking Management Client | To Do       |
+| User Management Client    | To Do       |
+| Lawn Mower Client         | To Do       |
+| Lawn Mower App            | To Do       |
 
 ## Folder Structure
 
