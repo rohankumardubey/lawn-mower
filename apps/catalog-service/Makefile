@@ -15,6 +15,9 @@ coverage:
 	@go test -coverprofile=coverage.out -v ./...
 	@go tool cover -html=coverage.out
 
+coverage-ci:
+	CVPKG=$(go list ./... | grep -v mocks | tr '\n' ',')
+	@go test -coverpkg=${CVPKG} -coverprofile=coverage.out -covermode=count  ./...
 
 .PHONY: clean list
 clean:

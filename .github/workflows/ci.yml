@@ -1,0 +1,57 @@
+name: Test And Lint Code
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - "*.md"
+      - ".vscode/**"
+      - ".husky/**"
+      - ".dockerignore"
+      - ".gitignore"
+      - "*.todo"
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - ".vscode/**"
+      - ".husky/**"
+      - ".dockerignore"
+      - ".gitignore"
+      - "*.todo"
+  workflow_dispatch:
+
+jobs:
+  catalog-service-test:
+    name: Lint And Test Catalog Service (Golang)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-go@v2
+        with:
+          stable: "false"
+          go-version: "1.18.4"
+
+      - name: Move To Catalog Service folder
+        run: cd apps/catalog-service
+
+      - name: Linting
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.47.2
+          golangci-lint run
+
+      - name: Test
+        run: make coverage-ci
+
+      - name: Build
+        run: make all
+
+      - name: Publish Code Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.out
+          flags: catalog-service,golang
+          name: catalog-service
