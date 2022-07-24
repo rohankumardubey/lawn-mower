@@ -14,9 +14,7 @@ type InMemoryRepo struct {
 func NewInMemoryRepo(initialMowers []*domain.Mower) *InMemoryRepo {
 	mowers := []*domain.Mower{}
 
-	for _, mower := range initialMowers {
-		mowers = append(mowers, mower)
-	}
+	mowers = append(mowers, initialMowers...)
 
 	return &InMemoryRepo{Mowers: mowers}
 }

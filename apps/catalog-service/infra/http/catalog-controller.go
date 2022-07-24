@@ -58,7 +58,13 @@ func (serv *CatalogHttpServer) CreateMower(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(mower)
+
+	err = json.NewEncoder(w).Encode(mower)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (serv *CatalogHttpServer) FindMower(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +79,12 @@ func (serv *CatalogHttpServer) FindMower(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	json.NewEncoder(w).Encode(mower)
+	err = json.NewEncoder(w).Encode(mower)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (serv *CatalogHttpServer) GetCatalog(w http.ResponseWriter, r *http.Request) {
@@ -86,5 +97,10 @@ func (serv *CatalogHttpServer) GetCatalog(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	json.NewEncoder(w).Encode(mowers)
+	err = json.NewEncoder(w).Encode(mowers)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

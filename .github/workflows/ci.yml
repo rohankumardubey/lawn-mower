@@ -1,0 +1,70 @@
+name: Test And Lint Code
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - "*.md"
+      - ".vscode/**"
+      - ".husky/**"
+      - ".dockerignore"
+      - ".gitignore"
+      - "*.todo"
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - ".vscode/**"
+      - ".husky/**"
+      - ".dockerignore"
+      - ".gitignore"
+      - "*.todo"
+  workflow_dispatch:
+
+jobs:
+  catalog-service-test:
+    name: Lint And Test Catalog Service (Golang)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: apps/catalog-service/go.mod
+
+      - name: Linting
+        uses: docker://morphy/revive-action:v2
+
+      - name: Test
+        run: |
+          cd apps/catalog-service
+          make coverage-ci
+          cat coverage.out
+
+      - name: Build
+        run: |
+          cd apps/catalog-service
+          make all
+
+      - uses: jandelgado/gcov2lcov-action@v1
+        with:
+          infile: coverage.out # optional, default filename is `coverage.out`
+          outfile: coverage.lcov # optional, default filename is `coverage.lcov`
+          working-directory: apps/catalog-service # optional, change working directory
+
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          api-token: ${{ secrets.CODACY_API_TOKEN }}
+          coverage-reports: apps/catalog-service/coverage.lcov
+          language: Go
+
+      # - name: Publish Code Coverage
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./apps/catalog-service/coverage.out
+      #     flags: catalog-service,golang
+      #     name: catalog-service
+      #     verbose: true
