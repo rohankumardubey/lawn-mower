@@ -12,8 +12,12 @@ var (
 	JsonContentType = "application/json"
 )
 
-type AddMowerInputDTO struct {
-	Name string
+type CreateMowerInputDTO struct {
+	Name string `json:"name"`
+}
+
+type UpdateMowerInputDTO struct {
+	Name string `json:"name,omitempty"`
 }
 
 type CatalogHttpServer struct {
@@ -30,7 +34,7 @@ func NewCatalogHttpServer(repo domain.CatalogRepository) (*CatalogHttpServer, er
 
 	router := http.NewServeMux()
 	router.HandleFunc("/mowers", http.HandlerFunc(s.CreateMower))
-	router.HandleFunc("/mowers/", http.HandlerFunc(s.FindMower))
+	router.HandleFunc("/mowers/", http.HandlerFunc(s.GetOrUpdateMower))
 	router.HandleFunc("/", http.HandlerFunc(s.GetCatalog))
 
 	s.Handler = router
@@ -41,7 +45,7 @@ func NewCatalogHttpServer(repo domain.CatalogRepository) (*CatalogHttpServer, er
 func (serv *CatalogHttpServer) CreateMower(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", JsonContentType)
 
-	mowerToCreate := &AddMowerInputDTO{}
+	mowerToCreate := &CreateMowerInputDTO{}
 
 	err := json.NewDecoder(r.Body).Decode(&mowerToCreate)
 
@@ -50,7 +54,7 @@ func (serv *CatalogHttpServer) CreateMower(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	mower, err := serv.service.Add(domain.AddMowerDTO{Name: mowerToCreate.Name})
+	mower, err := serv.service.CreateMower(domain.CreateMowerDTO{Name: mowerToCreate.Name})
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -61,16 +65,44 @@ func (serv *CatalogHttpServer) CreateMower(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(mower)
 }
 
-func (serv *CatalogHttpServer) FindMower(w http.ResponseWriter, r *http.Request) {
+func (serv *CatalogHttpServer) GetOrUpdateMower(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", JsonContentType)
 
 	id := strings.TrimPrefix(r.URL.Path, "/mowers/")
 
-	mower, err := serv.service.Find(id)
+	mower := &domain.Mower{}
+	var err error
 
-	if err != nil {
-		http.NotFound(w, r)
-		return
+	switch r.Method {
+	case http.MethodPatch:
+		{
+
+			mowerToUpdate := &UpdateMowerInputDTO{}
+			err = json.NewDecoder(r.Body).Decode(&mowerToUpdate)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			mower, err = serv.service.UpdateMower(id, domain.UpdateMowerDTO{
+				Name: mowerToUpdate.Name,
+			})
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+	case http.MethodGet:
+		{
+			mower, err = serv.service.GetMower(id)
+
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+		}
 	}
 
 	json.NewEncoder(w).Encode(mower)
@@ -79,7 +111,7 @@ func (serv *CatalogHttpServer) FindMower(w http.ResponseWriter, r *http.Request)
 func (serv *CatalogHttpServer) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", JsonContentType)
 
-	mowers, err := serv.service.FindAll()
+	mowers, err := serv.service.GetAvailableMowers()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -14,7 +14,7 @@ import (
 
 func TestCreateMowerCtrl(t *testing.T) {
 
-	t.Run("AddMowerCtrl return accepted on POST", func(t *testing.T) {
+	t.Run("CreateMowerCtrl return accepted on POST", func(t *testing.T) {
 		wantedCatalog := []*domain.Mower{
 			{Id: "1", Name: "M-90"},
 			{Id: "2", Name: "M-150"},
@@ -23,10 +23,10 @@ func TestCreateMowerCtrl(t *testing.T) {
 		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
 		server, _ := NewCatalogHttpServer(repo)
 
-		mower := &AddMowerInputDTO{Name: "M-600"}
+		mower := &CreateMowerInputDTO{Name: "M-600"}
 		wantedMower := domain.Mower{Name: "M-600", Id: "4"}
 
-		request := NewPostAddMowerRequest(mower)
+		request := NewCreateMowerRequest(mower)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -40,7 +40,40 @@ func TestCreateMowerCtrl(t *testing.T) {
 	})
 }
 
-func TestFindMowerCtrl(t *testing.T) {
+func TestUpdateMowerCtrl(t *testing.T) {
+
+	t.Run("UpdateMowerCtrl return accepted on PATCH", func(t *testing.T) {
+		wantedMower := domain.Mower{Id: "3", Name: "M-480"}
+
+		wantedUpdatedMower := wantedMower
+		wantedUpdatedMower.Name = "M-380"
+
+		wantedCatalog := []*domain.Mower{
+			{Id: "1", Name: "M-90"},
+			{Id: "2", Name: "M-150"},
+			&wantedMower,
+		}
+
+		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
+		server, _ := NewCatalogHttpServer(repo)
+
+		updateMower := domain.UpdateMowerDTO{Name: wantedUpdatedMower.Name}
+
+		request := NewUpdateMowerRequest(wantedMower.Id, updateMower)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		got := lm_testing.GetMowerFromResponse(t, response.Body)
+
+		lm_testing.AssertStatus(t, response.Code, http.StatusOK)
+		lm_testing.AssertContentType(t, response, JsonContentType)
+
+		lm_testing.AssertMowerEquals(t, got, wantedUpdatedMower)
+	})
+}
+
+func TestGetMowerCtrl(t *testing.T) {
 	wantedCatalog := []*domain.Mower{
 		{Id: "1", Name: "M-90"},
 		{Id: "2", Name: "M-150"},
@@ -50,8 +83,8 @@ func TestFindMowerCtrl(t *testing.T) {
 	repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
 	server, _ := NewCatalogHttpServer(repo)
 
-	t.Run("FindMowerCtrl return M-350 mower", func(t *testing.T) {
-		request := NewFindAddMowerRequest("1")
+	t.Run("GetMowerCtrl return M-350 mower", func(t *testing.T) {
+		request := NewGetMowerRequest("1")
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -65,8 +98,8 @@ func TestFindMowerCtrl(t *testing.T) {
 		lm_testing.AssertMowerEquals(t, got, wantedMower)
 	})
 
-	t.Run("FindMowerCtrl return M-150 mower", func(t *testing.T) {
-		request := NewFindAddMowerRequest("2")
+	t.Run("GetMowerCtrl return M-150 mower", func(t *testing.T) {
+		request := NewGetMowerRequest("2")
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -80,8 +113,8 @@ func TestFindMowerCtrl(t *testing.T) {
 		lm_testing.AssertMowerEquals(t, got, wantedMower)
 	})
 
-	t.Run("FindMowerCtrl return 404 on missing mower", func(t *testing.T) {
-		request := NewFindAddMowerRequest("6")
+	t.Run("GetMowerCtrl return 404 on missing mower", func(t *testing.T) {
+		request := NewGetMowerRequest("6")
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -114,14 +147,21 @@ func TestGetCatalogCtrl(t *testing.T) {
 	})
 }
 
-func NewPostAddMowerRequest(body interface{}) *http.Request {
+func NewCreateMowerRequest(body interface{}) *http.Request {
 	jsonBytes, _ := json.Marshal(body)
 
 	req, _ := http.NewRequest(http.MethodPost, "/mowers", bytes.NewReader(jsonBytes))
 	return req
 }
 
-func NewFindAddMowerRequest(id string) *http.Request {
+func NewUpdateMowerRequest(id string, body interface{}) *http.Request {
+	jsonBytes, _ := json.Marshal(body)
+
+	req, _ := http.NewRequest(http.MethodPatch, "/mowers/"+id, bytes.NewReader(jsonBytes))
+	return req
+}
+
+func NewGetMowerRequest(id string) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/mowers/"+id, nil)
 	return req
 }

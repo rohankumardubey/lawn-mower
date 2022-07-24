@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestFindMower(t *testing.T) {
+func TestGetMower(t *testing.T) {
 	t.Run("catalog: return a mower", func(t *testing.T) {
 		want := &domain.Mower{Id: "1", Name: "M-350"}
 
@@ -20,7 +20,7 @@ func TestFindMower(t *testing.T) {
 
 		service := NewCatalogService(repo)
 
-		got, err := service.Find("1")
+		got, err := service.GetMower("1")
 
 		lm_testing.AssertNoError(t, err)
 		lm_testing.AssertMowerEquals(t, *got, *want)
@@ -38,7 +38,7 @@ func TestFindMower(t *testing.T) {
 
 		service := NewCatalogService(repo)
 
-		_, err := service.Find(idNotFound)
+		_, err := service.GetMower(idNotFound)
 
 		got := strings.Replace(domain.ErrMowerNotFound, "%v", idNotFound, 1)
 
@@ -46,27 +46,84 @@ func TestFindMower(t *testing.T) {
 	})
 }
 
-func TestAddMower(t *testing.T) {
-	t.Run("catalog: add mower", func(t *testing.T) {
+func TestCreateMower(t *testing.T) {
+	t.Run("catalog: create new mower", func(t *testing.T) {
 		wantedCatalog := []*domain.Mower{}
 		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
 		service := NewCatalogService(repo)
 
-		newMower := domain.AddMowerDTO{Name: "M-150"}
+		newMower := domain.CreateMowerDTO{Name: "M-150"}
 
-		insertedMower, err := service.Add(newMower)
+		insertedMower, err := service.CreateMower(newMower)
 
 		lm_testing.AssertNoError(t, err)
 
-		got, _ := service.Find(insertedMower.Id)
+		got, _ := service.GetMower(insertedMower.Id)
 
 		if got == nil {
-			t.Errorf("could not find new added mower")
+			t.Errorf("could not find new created mower")
 		}
 	})
 }
 
-func TestFindAllMowers(t *testing.T) {
+func TestUpdateMower(t *testing.T) {
+	t.Run("catalog: update mower", func(t *testing.T) {
+		wantedMower := domain.Mower{Id: "1", Name: "M-90"}
+
+		wantedUpdatedMower := wantedMower
+		wantedUpdatedMower.Name = "M-150"
+
+		wantedCatalog := []*domain.Mower{
+			&wantedMower,
+		}
+
+		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
+		service := NewCatalogService(repo)
+
+		updateMower := domain.UpdateMowerDTO{Name: wantedUpdatedMower.Name}
+
+		_, err := service.UpdateMower(wantedCatalog[0].Id, updateMower)
+
+		lm_testing.AssertNoError(t, err)
+
+		got, _ := service.GetMower(wantedCatalog[0].Id)
+
+		if got == nil {
+			t.Errorf("could not find updated mower")
+			return
+		}
+
+		lm_testing.AssertMowerEquals(t, wantedUpdatedMower, *got)
+	})
+
+	t.Run("catalog: update mower with empty 'Name'", func(t *testing.T) {
+		wantedMower := domain.Mower{Id: "1", Name: "M-90"}
+
+		wantedCatalog := []*domain.Mower{
+			&wantedMower,
+		}
+
+		repo := &lm_testing.StubCatalogRepository{Mowers: wantedCatalog}
+		service := NewCatalogService(repo)
+
+		updateMower := domain.UpdateMowerDTO{}
+
+		_, err := service.UpdateMower(wantedCatalog[0].Id, updateMower)
+
+		lm_testing.AssertNoError(t, err)
+
+		got, _ := service.GetMower(wantedCatalog[0].Id)
+
+		if got == nil {
+			t.Errorf("could not find updated mower")
+			return
+		}
+
+		lm_testing.AssertMowerEquals(t, wantedMower, *got)
+	})
+}
+
+func TestGetAvailableMowers(t *testing.T) {
 	t.Run("catalog: find all mowers", func(t *testing.T) {
 		wantedCatalog := []*domain.Mower{
 			{Id: "1", Name: "M-90"},
@@ -83,7 +140,7 @@ func TestFindAllMowers(t *testing.T) {
 
 		service := NewCatalogService(repo)
 
-		got, err := service.FindAll()
+		got, err := service.GetAvailableMowers()
 
 		lm_testing.AssertNoError(t, err)
 
